@@ -16,15 +16,14 @@ import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
-
+// MPA
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
     private static final String TAG = "MainActivity";
     private Sensor Ac, Gy;
     private SensorManager SM;
     private LineChart xA,yA,zA,xG,yG,zG;
-    private Thread thread;
-    private boolean plotData = true;
+    private SensorEventListener listener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,13 +35,36 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         // Accelerometer Sensor
         Ac = SM.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-
         // Gyro
         Gy = SM.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
 
-        SM.registerListener(this,Ac,SensorManager.SENSOR_DELAY_NORMAL);
-        SM.registerListener(this,Gy,SensorManager.SENSOR_DELAY_NORMAL);
-        // Assign TextView
+        listener = new SensorEventListener() {
+            @Override
+            public void onAccuracyChanged(Sensor arg0, int arg1) {
+            }
+
+            @Override
+            public void onSensorChanged(SensorEvent event) {
+                if(event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+                    draw(event,xA,yA,zA);
+                    Log.v(TAG,"Trigger Ac");
+                }
+                else if(event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
+                    draw(event,xG,yG,zG);
+                    Log.v(TAG,"Trigger Gy");
+                }
+                else {
+                    Log.v(TAG,"Trigger" + event.sensor.getName());
+                }
+            }
+        };
+
+
+//        SM.registerListener(this,Gy,SensorManager.SENSOR_DELAY_NORMAL);
+        SM.registerListener(listener,Ac,SensorManager.SENSOR_DELAY_NORMAL);
+        SM.registerListener(listener,Gy,SensorManager.SENSOR_DELAY_NORMAL);
+
+        // Assign view
         xA = (LineChart) findViewById(R.id.xAchart);
         yA = (LineChart) findViewById(R.id.yAchart);
         zA = (LineChart) findViewById(R.id.zAchart);
@@ -55,17 +77,26 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         xG.setBackgroundColor(Color.WHITE);
         yG.setBackgroundColor(Color.WHITE);
         zG.setBackgroundColor(Color.WHITE);
-        LineData data = new LineData();
-        data.setValueTextColor(Color.WHITE);
-        xA.setData(data);
-        yA.setData(data);
-        zA.setData(data);
-        xG.setData(data);
-        yG.setData(data);
-        zG.setData(data);
+        LineData dataxA = new LineData();
+        LineData datayA = new LineData();
+        LineData datazA = new LineData();
+        LineData dataxG = new LineData();
+        LineData datayG = new LineData();
+        LineData datazG = new LineData();
+        dataxA.setValueTextColor(Color.WHITE);
+        datayA.setValueTextColor(Color.WHITE);
+        datazA.setValueTextColor(Color.WHITE);
+        dataxG.setValueTextColor(Color.WHITE);
+        datayG.setValueTextColor(Color.WHITE);
+        datazG.setValueTextColor(Color.WHITE);
 
+        xA.setData(dataxA);
+        yA.setData(datayA);
+        zA.setData(datazA);
+        xG.setData(dataxG);
+        yG.setData(datayG);
+        zG.setData(datazG);
 
-        feedMultiple();
     }
 
     @Override
@@ -88,46 +119,46 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             setX = createSet();
             dataX.addDataSet(setX);
         }
-//        if (setY == null) {
-//            setY = createSet();
-//            dataY.addDataSet(setY);
-//        }
-//        if (setZ == null) {
-//            setZ = createSet();
-//            dataZ.addDataSet(setZ);
-//        }
+        if (setY == null) {
+            setY = createSet();
+            dataY.addDataSet(setY);
+        }
+        if (setZ == null) {
+            setZ = createSet();
+            dataZ.addDataSet(setZ);
+        }
 ////data.addEntry(new Entry(set.getEntryCount(), (float) (Math.random() * 80) + 10f), 0);
-//        dataX.addEntry(new Entry(setX.getEntryCount(), event.values[0] + 5), 0);
-//        dataX.notifyDataChanged();
-//
-//        // let the chart know it's data has changed
-//        X.notifyDataSetChanged();
-//
-//        // limit the number of visible entries
-//        X.setVisibleXRangeMaximum(150);
-//        // mChart.setVisibleYRange(30, AxisDependency.LEFT);
-//
-//        // move to the latest entry
-//        X.moveViewToX(dataX.getEntryCount());
-//
-//        // Doing the above code for Y
-//        dataY.addEntry(new Entry(setY.getEntryCount(), event.values[1] + 5), 0);
-//        dataY.notifyDataChanged();
-//        Y.notifyDataSetChanged();
-//        Y.setVisibleXRangeMaximum(150);
-//        Y.moveViewToX(dataY.getEntryCount());
-//
-//        // Doing the above code for Z
-//        dataZ.addEntry(new Entry(setZ.getEntryCount(), event.values[2] + 5), 0);
-//        dataZ.notifyDataChanged();
-//        Z.notifyDataSetChanged();
-//        Z.setVisibleXRangeMaximum(150);
-//        Z.moveViewToX(dataZ.getEntryCount());
+        dataX.addEntry(new Entry(setX.getEntryCount(), event.values[0] + 5), 0);
+        dataX.notifyDataChanged();
+
+        // let the chart know it's data has changed
+        X.notifyDataSetChanged();
+
+        // limit the number of visible entries
+        X.setVisibleXRangeMaximum(150);
+        // mChart.setVisibleYRange(30, AxisDependency.LEFT);
+
+        // move to the latest entry
+        X.moveViewToX(dataX.getEntryCount());
+
+        // Doing the above code for Y
+        dataY.addEntry(new Entry(setY.getEntryCount(), event.values[1] + 5), 0);
+        dataY.notifyDataChanged();
+        Y.notifyDataSetChanged();
+        Y.setVisibleXRangeMaximum(150);
+        Y.moveViewToX(dataY.getEntryCount());
+
+        // Doing the above code for Z
+        dataZ.addEntry(new Entry(setZ.getEntryCount(), event.values[2] + 5), 0);
+        dataZ.notifyDataChanged();
+        Z.notifyDataSetChanged();
+        Z.setVisibleXRangeMaximum(150);
+        Z.moveViewToX(dataZ.getEntryCount());
 
     }
     private LineDataSet createSet() {
 
-        LineDataSet set = new LineDataSet(null, "Dynamic Data");
+        LineDataSet set = new LineDataSet(null, "");
         set.setAxisDependency(YAxis.AxisDependency.LEFT);
         set.setLineWidth(3f);
         set.setColor(Color.MAGENTA);
@@ -140,56 +171,21 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     @Override
-    public void onSensorChanged(SensorEvent event) {
-        if(plotData) {
-            if(event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-                draw(event,xA,yA,zA);
-            }
-            else if(event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
-                draw(event,xG,yG,zG);
-            }
-            plotData = false;
-        }
+    public final void onSensorChanged(SensorEvent event) {
+
     }
     @Override
     protected void onResume() {
         super.onResume();
-        SM.registerListener(this, Ac, SensorManager.SENSOR_DELAY_GAME);
-        SM.registerListener(this, Gy, SensorManager.SENSOR_DELAY_GAME);
+        SM.registerListener(listener,Ac,SensorManager.SENSOR_DELAY_NORMAL);
+        SM.registerListener(listener,Gy,SensorManager.SENSOR_DELAY_NORMAL);
     }
     @Override
     protected void onPause() {
         super.onPause();
-
-        if (thread != null) {
-            thread.interrupt();
-        }
-        SM.unregisterListener(this);
+        SM.unregisterListener(listener);
 
     }
-    private void feedMultiple() {
 
-        if (thread != null){
-            thread.interrupt();
-        }
-
-        thread = new Thread(new Runnable() {
-
-            @Override
-            public void run() {
-                while (true){
-                    plotData = true;
-                    try {
-                        Thread.sleep(10);
-                    } catch (InterruptedException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-                }
-            }
-        });
-
-        thread.start();
-    }
 
 }
